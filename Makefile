@@ -10,7 +10,7 @@ DEV_BUILD_ENV := BUILDX_NO_DEFAULT_ATTESTATIONS=1
 PNPM := corepack pnpm
 TURBO := TURBO_TELEMETRY_DISABLED=1 $(PNPM) turbo run
 
-.PHONY: dev-setup dev-up dev-down dev-logs dev-ps plane-install check-web check-admin check-space build-web build-admin build-space dev-build-source dev-build-source-ui dev-build-source-web dev-build-source-admin dev-build-source-space smoke
+.PHONY: dev-setup dev-up dev-down dev-reset dev-logs dev-ps plane-install check-web check-admin check-space build-web build-admin build-space dev-build-source dev-build-source-ui dev-build-source-web dev-build-source-admin dev-build-source-space smoke
 
 dev-setup:
 	bash scripts/setup_dev.sh
@@ -20,6 +20,9 @@ dev-up: dev-setup
 
 dev-down:
 	$(COMPOSE) down
+
+dev-reset: dev-setup
+	bash scripts/dev_reset.sh
 
 dev-logs:
 	$(COMPOSE) logs -f

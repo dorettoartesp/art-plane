@@ -16,7 +16,7 @@ jobs:
         run: bash -n scripts/*.sh
 
       - name: Validate Makefile targets
-        run: make --dry-run dev-setup dev-up dev-down dev-logs dev-ps plane-install check-web check-admin check-space build-web build-admin build-space dev-build-source dev-build-source-ui dev-build-source-web dev-build-source-admin dev-build-source-space smoke
+        run: make --dry-run dev-setup dev-up dev-down dev-reset dev-logs dev-ps plane-install check-web check-admin check-space build-web build-admin build-space dev-build-source dev-build-source-ui dev-build-source-web dev-build-source-admin dev-build-source-space smoke
 
       - name: Validate Docker Compose config
         run: docker compose --project-name art-plane-ci --env-file .env.example --file plane/deployments/cli/community/docker-compose.yml config --quiet

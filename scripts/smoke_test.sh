@@ -140,6 +140,40 @@ echo "Checking web proxy on http://localhost:${HTTP_PORT}..."
 wait_for "web proxy" 300 curl --fail --silent --show-error --location --max-time 20 \
   "http://localhost:${HTTP_PORT}/" >/dev/null
 
+echo "Checking Plane instance metadata on http://localhost:${HTTP_PORT}/api/instances/..."
+check_instance_metadata() {
+  local body
+  body="$(curl --fail --silent --show-error --location --max-time 20 "http://localhost:${HTTP_PORT}/api/instances/")"
+  INSTANCE_METADATA="$body" INSTANCE_HTTP_PORT="$HTTP_PORT" python - <<'PY'
+import json
+import os
+import sys
+
+try:
+    data = json.loads(os.environ["INSTANCE_METADATA"])
+except Exception as exc:
+    print(f"Invalid /api/instances/ response: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+instance = data.get("instance") or {}
+config = data.get("config") or {}
+name = instance.get("instance_name") or "(unnamed)"
+setup_done = instance.get("is_setup_done")
+version = instance.get("current_version") or "(unknown)"
+
+print(f"Instance: {name}; version: {version}; setup_done: {setup_done}")
+if setup_done is False:
+    port = os.environ["INSTANCE_HTTP_PORT"]
+    print(f"Instance setup is pending. Open http://localhost:{port} and complete the first setup.")
+
+if not config:
+    print("Missing instance config payload.", file=sys.stderr)
+    sys.exit(1)
+PY
+}
+
+wait_for "instance metadata" 300 check_instance_metadata
+
 echo "Checking admin route on http://localhost:${HTTP_PORT}/god-mode/..."
 wait_for "admin route" 300 curl --fail --silent --show-error --location --max-time 20 \
   "http://localhost:${HTTP_PORT}/god-mode/" >/dev/null

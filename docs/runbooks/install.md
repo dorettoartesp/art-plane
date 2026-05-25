@@ -77,6 +77,10 @@ make dev-build-source-space
 make dev-build-source-ui
 ```
 
+O primeiro build source via Docker pode demorar bastante porque instala dependências dentro
+da imagem. Esse caminho é gate de integração; o loop diário deve usar `make check-*` e
+`make build-*`.
+
 Use o build completo apenas antes de PRs maiores, release ou alterações que afetem backend,
 workers, proxy ou compose:
 
@@ -90,13 +94,26 @@ make dev-build-source
 make smoke
 ```
 
-O smoke test valida containers, health interno da API, web, admin e space via proxy local.
+O smoke test valida containers, health interno da API, web, admin, space e o endpoint
+`/api/instances/`. Se `is_setup_done=false`, o ambiente está saudável, mas o primeiro
+setup ainda precisa ser concluído no navegador.
 
 ## Acesso
 
 ```text
 http://localhost:8080
 ```
+
+No primeiro acesso, preencha `Setup your Plane Instance` para criar o administrador
+local. Use uma senha forte; se a senha for fraca, o Plane pode voltar para a mesma tela.
+Exemplo de senha forte para dev local:
+
+```text
+StrongPass123!
+```
+
+Depois do setup, faça login e crie pelo menos um workspace, um projeto e uma tarefa
+para validar o fluxo funcional básico.
 
 ## Logs
 
@@ -112,11 +129,32 @@ make dev-down
 
 ## Reset de dados locais
 
-Para remover containers e volumes do ambiente local:
+Para remover containers e volumes do ambiente local e refazer o setup inicial:
 
 ```bash
-cd plane
-docker compose --project-name art-plane-dev --env-file .env -f docker-compose.yml down -v
+make dev-reset
 ```
 
-Use `down -v` somente quando os dados locais puderem ser descartados.
+Esse comando apaga banco local, arquivos enviados, filas, cache e usuário admin do
+ambiente `dev`. Ele pede confirmação textual. Em execução não interativa:
+
+```bash
+ART_PLANE_RESET_CONFIRM=delete-dev-data make dev-reset
+```
+
+Use somente quando os dados locais puderem ser descartados. Nunca use esse fluxo para
+`stg` ou `prd`.
+
+## Validação completa de máquina nova
+
+```text
+git clone <URL_DO_REPOSITORIO> art-plane
+cd art-plane
+make dev-setup
+make dev-up
+abrir http://localhost:8080
+fazer setup inicial com senha forte
+login
+criar workspace, projeto e tarefa
+make smoke
+```

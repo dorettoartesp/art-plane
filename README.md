@@ -76,6 +76,9 @@ make dev-build-source-space    # mudanças no space
 make dev-build-source-ui       # mudanças nos três frontends
 ```
 
+O primeiro build source via Docker pode ser demorado porque instala dependências dentro da
+imagem. Para desenvolvimento diário, prefira `make check-*` e `make build-*`.
+
 Use o build completo apenas como gate mais pesado, antes de PRs grandes, release ou mudança
 em backend/infra:
 
@@ -91,6 +94,14 @@ Acesse:
 
 ```text
 http://localhost:8080
+```
+
+No primeiro acesso, a tela `Setup your Plane Instance` cria o administrador local.
+Use uma senha forte; o Plane valida a senha no backend e pode voltar para a mesma tela
+quando a senha for fraca. Um exemplo valido para ambiente local seria:
+
+```text
+StrongPass123!
 ```
 
 Rode smoke test:
@@ -109,6 +120,34 @@ Pare o ambiente:
 
 ```bash
 make dev-down
+```
+
+Para descartar completamente os dados locais de desenvolvimento e refazer o primeiro
+setup:
+
+```bash
+make dev-reset
+```
+
+Esse comando remove volumes Docker do projeto `art-plane-dev`, incluindo banco local,
+arquivos enviados, filas, cache e usuário admin criado no setup. Em execução não
+interativa, confirme explicitamente:
+
+```bash
+ART_PLANE_RESET_CONFIRM=delete-dev-data make dev-reset
+```
+
+Fluxo manual recomendado para validar uma máquina nova:
+
+```text
+git clone
+make dev-setup
+make dev-up
+abrir http://localhost:8080
+fazer setup inicial com senha forte
+login
+criar workspace, projeto e tarefa
+make smoke
 ```
 
 ## Arquivos `.env`
