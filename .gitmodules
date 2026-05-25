@@ -1,4 +1,0 @@
-[submodule "src"]
-	path = src
-	url = git@github.com:artesp/plane-artesp.git
-	branch = main

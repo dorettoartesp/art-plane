@@ -1,6 +1,6 @@
 ---
 name: plane-artesp
-description: Orienta avaliacao, implantacao, operacao e evolucao do Plane CE para ARTESP, com ambiente dev local reproduzivel em qualquer PC que clone o repositorio, e ambientes stg/prd self-hosted em VMs quando provisionados. Inclui decisao de fork minimo, conformidade AGPL v3, sincronizacao com upstream, CI/CD, backup, restore, observabilidade, seguranca, LGPD, SSO/OIDC, auditoria, workflows e portal externo. Use quando a tarefa envolver Plane CE, fork plane-artesp, dev local, instalacao self-hosted, operacao institucional, atualizacoes upstream ou arquitetura de exposicao externa.
+description: Orienta avaliacao, implantacao, operacao e evolucao do Plane CE para ARTESP em monorepo institucional, com codigo do Plane em plane/, ambiente dev local reproduzivel em qualquer PC que clone o repositorio, e ambientes stg/prd self-hosted em VMs quando provisionados. Inclui conformidade AGPL v3, sincronizacao com upstream via subtree/remoto upstream-plane, CI/CD, backup, restore, observabilidade, seguranca, LGPD, SSO/OIDC, auditoria, workflows e portal externo. Use quando a tarefa envolver Plane CE, fork institucional, dev local, instalacao self-hosted, operacao institucional, atualizacoes upstream ou arquitetura de exposicao externa.
 metadata:
   source: "Consolidated from .agents/skills/plane-artesp and .agents/skills/plane-artesp-dev"
 ---
@@ -22,7 +22,7 @@ Use esta skill para orientar trabalho tecnico no Plane CE da ARTESP. Trate o Pla
    - https://developers.plane.so/api-reference
    - https://www.gnu.org/licenses/agpl-3.0.html
 3. Valide a estrutura real da versao-alvo. Nao presuma layouts antigos como `apiserver/`, `web/`, Next.js ou Yarn.
-4. Comece por ambiente `dev` local reproduzivel em qualquer PC que clone este repositorio, usando o submodule `src` e Docker Compose local.
+4. Comece por ambiente `dev` local reproduzivel em qualquer PC que clone este repositorio, usando o codigo do Plane em `plane/` e Docker Compose local.
 5. Use `stg` e `prd` como ambientes self-hosted em VMs separadas quando elas forem provisionadas. Nao presuma que essas VMs ja existem.
 6. Crie fork apenas quando houver modificacao de codigo indispensavel.
 7. Prefira configuracao nativa, composicao externa, API ou webhooks antes de patch no core.
@@ -37,7 +37,7 @@ Leia `references/plane-artesp-reference.md` quando a tarefa exigir detalhes de:
 - stack real do Plane CE e inspecao de upstream;
 - ambientes dev/stg/prd, fases de implantacao e criterios de go-live;
 - AGPL v3, arquivos de conformidade e aviso de codigo-fonte;
-- estrategia de fork, branches, PRs e sincronizacao com upstream;
+- estrutura de monorepo, branches, PRs e sincronizacao com upstream;
 - variaveis de ambiente, secrets e hardening;
 - SSO/OIDC, auditoria, workflows e features comerciais;
 - portal externo, LGPD, webhooks e protecao contra SSRF;
@@ -47,6 +47,8 @@ Leia `references/plane-artesp-reference.md` quando a tarefa exigir detalhes de:
 
 - Use Docker Compose local como caminho obrigatorio para `dev`, para que qualquer pessoa consiga clonar o repositorio e executar a versao de desenvolvimento.
 - Use Docker Compose em VMs como caminho recomendado para `stg` e `prd` quando as VMs forem provisionadas.
+- Mantenha o codigo do Plane como diretorio normal em `plane/`, versionado no proprio monorepo. Nao use submodule para o Plane.
+- Use o remoto `upstream-plane` e `git subtree` para importar ou atualizar o codigo a partir de `makeplane/plane`.
 - Adote Kubernetes somente com equipe capacitada, cluster maduro, storage persistente confiavel, ingress/TLS, backup, observabilidade e justificativa real de alta disponibilidade.
 - Nao versionar `.env` real, secrets, dumps, anexos, dados pessoais, certificados privados ou configuracoes internas sensiveis.
 - Registrar a versao-alvo em `VERSION.md`.

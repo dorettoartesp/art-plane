@@ -58,7 +58,7 @@ Nunca presumir que o Plane, por si só, possui modelo adequado para exposição 
    configurações internas sensíveis não devem ser publicados.
 5. O fork deve ser mínimo, rastreável e tecnicamente justificável.
 6. O ambiente `dev` deve rodar localmente em qualquer PC que clone este repositório, usando
-   Docker Compose e o submodule `src`.
+   Docker Compose e o código do Plane em `plane/`.
 7. Os ambientes `stg` e `prd` devem rodar em VMs self-hosted quando forem provisionadas.
 8. Kubernetes só deve ser adotado depois de validação operacional, equipe capacitada e
    necessidade real de alta disponibilidade.
@@ -251,8 +251,8 @@ clone este repositório, sem depender de VMs institucionais ainda não provision
 Requisitos de `dev`:
 
 ```text
-- clonar este repositório com submodules;
-- inicializar o submodule src;
+- clonar este repositório com git clone normal;
+- encontrar o código do Plane já versionado em plane/;
 - usar Docker Compose local do Plane CE ou compose wrapper do repositório raiz;
 - usar .env local derivado de .env.example, sem secrets reais;
 - permitir build, subida, smoke test e parada do ambiente;
@@ -262,15 +262,8 @@ Requisitos de `dev`:
 Comando esperado para novos clones:
 
 ```bash
-git clone --recurse-submodules <URL_DO_REPOSITORIO> art-plane
+git clone <URL_DO_REPOSITORIO> art-plane
 cd art-plane
-git submodule update --init --recursive
-```
-
-Se o clone já foi feito sem submodules:
-
-```bash
-git submodule update --init --recursive
 ```
 
 ### 9.2 STG e PRD: Docker Compose em VMs (quando provisionadas)
@@ -492,25 +485,53 @@ Criar fork somente se pelo menos uma condição for verdadeira:
 Não criar fork apenas para: instalar em VM, configurar domínio/SMTP/banco,
 criar backup, criar observabilidade, criar portal externo ou escrever documentação.
 
-### 12.2 Setup do repositório
+### 12.2 Estrutura recomendada do monorepo
 
-```bash
-git clone https://github.com/makeplane/plane.git plane-artesp --branch vX.Y.Z --depth 1
-cd plane-artesp
-
-git remote rename origin upstream
-git remote add origin git@github.com:artesp/plane-artesp.git
-
-git fetch upstream --tags
-git checkout -b main vX.Y.Z
-git push -u origin main
-
-echo "vX.Y.Z" > VERSION.md
-git add VERSION.md
-git commit -m "chore: set upstream base version vX.Y.Z"
+```text
+art-plane/
+  plane/                 # código do Plane CE incorporado e modificado
+  ops/                   # composição, Ansible e scripts de operação ARTESP
+  docs/                  # arquitetura, runbooks, compliance e operação
+  .agents/skills/        # skill institucional
+  .github/workflows/     # CI/CD
+  VERSION.md
+  CHANGELOG.md
+  COMPLIANCE.md
+  ROLLBACK.md
+  README.md
 ```
 
-### 12.3 Branches
+O diretório `plane/` deve ser uma pasta normal versionada no próprio repositório, não um
+submodule. Isso garante que um `git clone` simples contenha todo o código necessário para
+desenvolvimento local, auditoria AGPL e operação.
+
+### 12.3 Sincronização com upstream via subtree
+
+Configuração inicial:
+
+```bash
+git remote add upstream-plane https://github.com/makeplane/plane.git
+git fetch upstream-plane --tags
+```
+
+Importação inicial, quando `plane/` ainda não existir:
+
+```bash
+git subtree add --prefix=plane upstream-plane vX.Y.Z --squash
+```
+
+Atualização futura:
+
+```bash
+git fetch upstream-plane --tags
+git subtree pull --prefix=plane upstream-plane vX.Y.Z --squash
+```
+
+Após cada sincronização, atualizar `VERSION.md`, `CHANGELOG.md`, smoke tests e documentação
+de rollback. Resolver conflitos preservando customizações mínimas e removendo patches que
+o upstream já tenha incorporado.
+
+### 12.4 Branches
 
 ```text
 main              → produção estável
@@ -523,7 +544,7 @@ security/*        → correções emergenciais de segurança
 upstream-sync/*   → sincronização temporária com upstream
 ```
 
-### 12.4 Regras
+### 12.5 Regras
 
 1. Nunca desenvolver diretamente em `main`.
 2. Toda mudança deve passar por Pull Request.
@@ -533,7 +554,7 @@ upstream-sync/*   → sincronização temporária com upstream
 6. Nunca editar migration já aplicada em ambiente compartilhado.
 7. Nunca versionar segredos.
 
-### 12.5 Conventional Commits
+### 12.6 Conventional Commits
 
 ```text
 feat: add public source link to about page
@@ -543,7 +564,7 @@ docs: add AGPL compliance guide
 security: harden object storage configuration
 ```
 
-### 12.6 Template de Pull Request
+### 12.7 Template de Pull Request
 
 ```markdown
 ## Objetivo
