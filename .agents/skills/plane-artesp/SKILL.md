@@ -22,7 +22,7 @@ Use esta skill para orientar trabalho tecnico no Plane CE da ARTESP. Trate o Pla
    - https://developers.plane.so/api-reference
    - https://www.gnu.org/licenses/agpl-3.0.html
 3. Valide a estrutura real da versao-alvo. Nao presuma layouts antigos como `apiserver/`, `web/`, Next.js ou Yarn.
-4. Comece por ambiente `dev` local reproduzivel em qualquer PC que clone este repositorio, usando o codigo do Plane em `plane/` e Docker Compose local.
+4. Comece por ambiente `dev` local reproduzivel em qualquer PC que clone este repositorio, usando os comandos da raiz (`make dev-up`, `make dev-down`, `make dev-logs`, `make smoke`) para operar o Plane via Docker Compose local. O caminho padrao deve usar as imagens CE publicadas pelo upstream; build local do codigo-fonte fica em alvo separado.
 5. Use `stg` e `prd` como ambientes self-hosted em VMs separadas quando elas forem provisionadas. Nao presuma que essas VMs ja existem.
 6. Crie fork apenas quando houver modificacao de codigo indispensavel.
 7. Prefira configuracao nativa, composicao externa, API ou webhooks antes de patch no core.
@@ -45,12 +45,15 @@ Leia `references/plane-artesp-reference.md` quando a tarefa exigir detalhes de:
 
 ## Regras De Decisao
 
-- Use Docker Compose local como caminho obrigatorio para `dev`, para que qualquer pessoa consiga clonar o repositorio e executar a versao de desenvolvimento.
+- Use Docker Compose local como caminho obrigatorio para `dev`, para que qualquer pessoa consiga clonar o repositorio e executar a versao de desenvolvimento sem compilar todo o Plane no primeiro uso.
+- Exponha operacao local por wrappers na raiz do monorepo. Nao exigir que o operador memorize comandos internos do Plane para o fluxo comum.
+- Use `plane/deployments/cli/community/docker-compose.yml` e imagens `makeplane/plane-*` como caminho padrao de runtime local. Reserve build source para alvo explicito, por exemplo `make dev-build-source`.
 - Use Docker Compose em VMs como caminho recomendado para `stg` e `prd` quando as VMs forem provisionadas.
 - Mantenha o codigo do Plane como diretorio normal em `plane/`, versionado no proprio monorepo. Nao use submodule para o Plane.
 - Use o remoto `upstream-plane` e `git subtree` para importar ou atualizar o codigo a partir de `makeplane/plane`.
 - Adote Kubernetes somente com equipe capacitada, cluster maduro, storage persistente confiavel, ingress/TLS, backup, observabilidade e justificativa real de alta disponibilidade.
 - Nao versionar `.env` real, secrets, dumps, anexos, dados pessoais, certificados privados ou configuracoes internas sensiveis.
+- Manter o contrato de ambiente claro: `.env.example` para variaveis do monorepo/dev, `plane/.env.example` para upstream Plane, `.env` e `plane/.env` locais ignorados, e `scripts/setup_dev.sh` para preparar a maquina.
 - Registrar a versao-alvo em `VERSION.md`.
 - Criar `COMPLIANCE.md` se houver codigo derivado modificado.
 - Manter textos visiveis ao usuario em portugues brasileiro formal.

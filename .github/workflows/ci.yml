@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate shell scripts
+        run: bash -n scripts/*.sh
+
+      - name: Validate Makefile targets
+        run: make --dry-run dev-setup dev-up dev-down dev-logs dev-ps smoke
+
+      - name: Check Plane source is vendored
+        run: |
+          test -f plane/package.json
+          test -f plane/docker-compose.yml
+          if git ls-files -s | awk '$1 == 160000 { found=1 } END { exit found ? 0 : 1 }'; then
+            echo "Submodules/gitlinks are not allowed." >&2
+            exit 1
+          fi
