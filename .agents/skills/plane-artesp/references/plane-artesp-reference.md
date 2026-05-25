@@ -57,13 +57,15 @@ Nunca presumir que o Plane, por si só, possui modelo adequado para exposição 
 4. Segredos, chaves, tokens, variáveis de ambiente, dumps de banco, anexos, dados pessoais e
    configurações internas sensíveis não devem ser publicados.
 5. O fork deve ser mínimo, rastreável e tecnicamente justificável.
-6. A implantação inicial deve priorizar Docker Compose em VMs.
-7. Kubernetes só deve ser adotado depois de validação operacional, equipe capacitada e
+6. O ambiente `dev` deve rodar localmente em qualquer PC que clone este repositório, usando
+   Docker Compose e o submodule `src`.
+7. Os ambientes `stg` e `prd` devem rodar em VMs self-hosted quando forem provisionadas.
+8. Kubernetes só deve ser adotado depois de validação operacional, equipe capacitada e
    necessidade real de alta disponibilidade.
-8. O Plane não deve ser exposto diretamente ao público geral.
-9. Concessionárias e usuários externos devem acessar, preferencialmente, portal ou camada
+9. O Plane não deve ser exposto diretamente ao público geral.
+10. Concessionárias e usuários externos devem acessar, preferencialmente, portal ou camada
    de integração separada.
-10. Backups, restauração testada, observabilidade e segurança são requisitos de produção,
+11. Backups, restauração testada, observabilidade e segurança são requisitos de produção,
     não melhorias opcionais.
 
 ---
@@ -78,6 +80,7 @@ Nunca presumir que o Plane, por si só, possui modelo adequado para exposição 
 | Upstream | Repositório original do projeto | Repositório oficial `makeplane/plane`. |
 | Downstream | Repositório derivado | Fork `artesp/plane-artesp`. |
 | Self-hosted | Hospedado pela própria organização | Execução em VMs sob controle da ARTESP. |
+| DEV | Development | Ambiente local reproduzível em qualquer PC que clone este repositório. |
 | SSO | Single Sign-On | Login único por provedor de identidade. |
 | OIDC | OpenID Connect | Protocolo de autenticação baseado em OAuth 2.0. |
 | IdP | Identity Provider | Provedor de identidade, como Keycloak. |
@@ -138,7 +141,7 @@ Conteúdo mínimo:
 - Tag upstream validada: vX.Y.Z
 - Data de validação: DD/MM/AAAA
 - Responsável técnico: <nome>
-- Tipo de implantação: Docker Compose em VM
+- Tipo de implantação: DEV local com Docker Compose; STG/PRD em VMs quando provisionadas
 - Customizações ativas: nenhuma / lista
 - Última sincronização upstream: DD/MM/AAAA
 - Observações de segurança: <resumo>
@@ -238,11 +241,41 @@ bash scripts/inspect_upstream_layout.sh > docs/upstream-layout-$(date +%Y%m%d).t
 
 ---
 
-## 9. Estratégia de implantação
+## 9. Estratégia de ambientes e implantação
 
-### 9.1 Fase inicial: Docker Compose em VMs (recomendado)
+### 9.1 DEV local: obrigatório e reproduzível
 
-Topologia mínima recomendada para produção institucional:
+O ambiente `dev` deve ser o primeiro alvo operacional. Ele deve rodar em qualquer PC que
+clone este repositório, sem depender de VMs institucionais ainda não provisionadas.
+
+Requisitos de `dev`:
+
+```text
+- clonar este repositório com submodules;
+- inicializar o submodule src;
+- usar Docker Compose local do Plane CE ou compose wrapper do repositório raiz;
+- usar .env local derivado de .env.example, sem secrets reais;
+- permitir build, subida, smoke test e parada do ambiente;
+- documentar comandos em README.md e docs/runbooks/install.md.
+```
+
+Comando esperado para novos clones:
+
+```bash
+git clone --recurse-submodules <URL_DO_REPOSITORIO> art-plane
+cd art-plane
+git submodule update --init --recursive
+```
+
+Se o clone já foi feito sem submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
+### 9.2 STG e PRD: Docker Compose em VMs (quando provisionadas)
+
+Topologia mínima recomendada para homologação e produção institucional:
 
 ```text
 [Usuários internos / Rede ARTESP]
@@ -275,7 +308,11 @@ Topologia mínima recomendada para produção institucional:
 Em piloto ou prova de conceito, todos os serviços podem rodar em uma VM.
 Para produção institucional, separar aplicação, dados e backup.
 
-### 9.2 Fase posterior: Kubernetes
+As VMs de `stg` e `prd` podem ainda não existir. Enquanto não forem provisionadas, não
+escrever automações que dependam de hosts, DNS, SSH ou secrets reais. Usar placeholders
+documentados e manter deploy de VM como etapa futura.
+
+### 9.3 Fase posterior: Kubernetes
 
 Kubernetes só deve ser adotado quando houver:
 
@@ -294,13 +331,14 @@ Kubernetes só deve ser adotado quando houver:
 
 ## 10. Escopo por fases
 
-### Fase 0 — Validação (obrigatória antes de qualquer implantação)
+### Fase 0 — DEV local e validação (obrigatória antes de STG/PRD)
 
 Objetivo: verificar se o Plane CE atende minimamente ao uso pretendido sem customização.
 
 Entregas:
 
-- instalação limpa do Plane CE em ambiente de teste;
+- instalação limpa do Plane CE em ambiente `dev` local reproduzível;
+- instruções para qualquer pessoa clonar o repositório e subir o ambiente local;
 - verificação de features disponíveis no CE da versão escolhida;
 - teste de usuários, workspaces, projetos, tarefas, módulos, ciclos, páginas, anexos,
   API e webhooks;
@@ -320,6 +358,9 @@ Objetivo: tornar a implantação operável em VM da ARTESP.
 Entregas: DNS, HTTPS/TLS, SMTP, backup e restore testados, logs centralizados,
 monitoramento básico, hardening de variáveis de ambiente, política de atualização,
 staging e produção separados.
+
+Pré-condição: VMs de `stg` e/ou `prd` provisionadas. Antes disso, manter esta fase como
+planejamento, documentação e scripts parametrizados.
 
 Critério de saída:
 
@@ -1052,9 +1093,9 @@ Não instrumentar antes de estabilizar a implantação base.
 
 | Ambiente | Infra | Trigger | Aprovação |
 |---|---|---|---|
-| `dev` | Local (Docker Compose) | Push em qualquer branch | — |
-| `stg` | VM ARTESP | Push em `develop` | Automático |
-| `prd` | VM ARTESP | Push em `main` | Manual no GitHub |
+| `dev` | Local em qualquer PC com clone do repo (Docker Compose) | Manual / push em qualquer branch | Sem VM |
+| `stg` | VM ARTESP, quando provisionada | Push em `develop` | Automático ou manual controlado |
+| `prd` | VM ARTESP, quando provisionada | Push em `main` | Manual no GitHub com aprovação |
 
 ### 26.2 Estrutura de arquivos
 
@@ -1519,7 +1560,8 @@ docs/runbooks/database-maintenance.md
 
 ```text
 [ ] Versão-alvo congelada e documentada em VERSION.md
-[ ] Instalação reproduzível via Docker Compose oficial
+[ ] DEV local reproduzível em qualquer PC que clone o repositório
+[ ] Instalação reproduzível via Docker Compose oficial ou wrapper local documentado
 [ ] Script de inspeção executado e saída arquivada
 [ ] DNS configurado
 [ ] TLS configurado (Caddy ou proxy externo)
