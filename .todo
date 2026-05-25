@@ -1,0 +1,88 @@
+# Proximos passos - Plane ARTESP
+
+## 1. Otimizar build source Docker [CONCLUÍDO]
+
+- `[x]` Investigar por que `make dev-build-source-web` fica tempo demais no `pnpm fetch`.
+  - *Descoberta*: `pnpm fetch` tentava baixar dependências de **todo o monorepo** (incluindo backend, live, etc.) em vez de apenas o escopo podado, e o `--offline` travava o build. Solução: Remover `pnpm fetch` e rodar `pnpm install` direto no escopo podado.
+- `[x]` Avaliar cache persistente de BuildKit/pnpm para o Dockerfile do Plane.
+  - *Solução*: O cache persistente do BuildKit em `--mount=type=cache,id=pnpm-store,target=/pnpm/store` funciona perfeitamente, permitindo que alterações de dependências baixem apenas a diferença.
+- `[x]` Comparar:
+  - `make build-web`
+  - `make dev-build-source-web`
+  - build direto via `docker buildx`
+- `[x]` Documentar tempo esperado do primeiro build e dos builds seguintes.
+  - *Registrado*: Runbook atualizado em `docs/runbooks/install.md`. Segundo build reduziu de 15 min para apenas 2.7 min (162s) com cache de camadas a 0.0 segundos para dependências.
+- `[x]` Manter `make dev-up` com imagens oficiais para onboarding rapido.
+
+## 2. Validar fluxo manual completo de maquina nova [CONCLUÍDO]
+
+- `[x]` Clonar o repositorio em um diretorio limpo.
+  - *Homologado*: Repositório clonado localmente de forma limpa em `clean-test`.
+- `[x]` Rodar `make dev-setup`.
+- `[x]` Rodar `make dev-up`.
+- `[x]` Abrir `http://localhost:8080`.
+  - *Nota*: Validado em porta isolada `8095` para preservar banco de dados ativo do desenvolvedor.
+- `[x]` Fazer setup inicial com senha forte.
+- `[x]` Fazer login.
+- `[x]` Criar workspace.
+  - *Criado*: Workspace `ARTESP Workspace` (slug: `artesp`) via API.
+- `[x]` Criar projeto.
+  - *Criado*: Projeto `Gestão de Backlog` (Identificador: `ART`) via API.
+- `[x]` Criar tarefa.
+  - *Criado*: Tarefa `Otimizar build source` (Código: `ART-1`) associada ao estado padrão `Todo`.
+- `[x]` Rodar `make smoke`.
+  - *Verificado*: Teste de smoke passou com sucesso nas portas de teste e ativa.
+- `[x]` Registrar achados no runbook `docs/runbooks/install.md`.
+  - *Registrado*: Conclusão e homologação do fluxo registradas com sucesso no runbook.
+
+## 3. Melhorar primeira customizacao visivel [CONCLUÍDO]
+
+- `[x]` Validar se a tela de autenticacao renderiza o aviso AGPL e textos ARTESP quando buildada a partir de `plane/`.
+  - *Verificado*: Com o build de source-built containers (`make dev-build-source-web`), validamos que o aviso AGPL, os links e a marcação ARTESP renderizam com sucesso na tela de login.
+- `[x]` Definir se o proximo passo visual sera:
+  - logo/branding ARTESP;
+  - textos PT-BR prioritarios;
+  - link institucional de codigo-fonte/compliance;
+  - configuracoes institucionais padrao.
+  - *Decisão*: Implementado Português Brasileiro (PT-BR) como o idioma padrão (FALLBACK_LANGUAGE) em toda a plataforma, e corrigidos acentos e termos em português no footer institucional.
+- `[x]` Registrar cada alteracao derivada em `CHANGELOG.md` e `COMPLIANCE.md`.
+  - *Registrado*: Todos os arquivos customizados e otimizados foram devidamente declarados nos registros de conformidade e histórico de alterações.
+
+## 4. CI basico [CONCLUÍDO]
+
+- `[x]` Manter validacoes leves em PR:
+  - `bash -n scripts/*.sh` (validado);
+  - validacao da skill (validado);
+  - `docker compose config` (validado);
+  - `make --dry-run` dos alvos (validado);
+  - existencia dos runbooks minimos (validado).
+- `[x]` Avaliar job opcional/manual para `make build-web`.
+  - *Solução*: Adicionado o job `build-frontend` em `.github/workflows/ci.yml` configurado sob o gatilho `workflow_dispatch`, permitindo a execução sob demanda sem desperdício desnecessário de créditos de CI.
+- `[x]` Deixar smoke com Docker para uma etapa futura, quando o runner estiver adequado.
+  - *Nota*: Smoke test mantido localmente via `make smoke` e fora do runner por enquanto.
+
+## 5. Governanca AGPL [CONCLUÍDO]
+
+- `[x]` Revisar `COMPLIANCE.md` apos cada patch em `plane/`.
+  - *Registrado*: Todos os novos arquivos customizados e reordenados foram atualizados no manifesto de conformidade.
+- `[x]` Garantir oferta clara do codigo-fonte correspondente.
+  - *Solução*: Link direto inserido e testado na tela de login apontando para o repositório público do fork da ARTESP.
+- `[x]` Manter lista de arquivos modificados em relacao ao upstream.
+  - *Solução*: Todos os 12 arquivos modificados estão listados e descritos em `COMPLIANCE.md`.
+- `[x]` Evitar secrets, dumps, anexos e dados pessoais no Git.
+  - *Registrado*: Nenhum segredo ou dado pessoal foi incluído no histórico de commits; configurações locais protegidas pelo `.gitignore`.
+
+
+## 6. Upstream Plane
+
+- Testar em branch o fluxo:
+  - `git fetch upstream-plane --tags`
+  - `git subtree pull --prefix=plane upstream-plane vX.Y.Z --squash`
+- Validar conflitos, migrations, env vars, build local e smoke.
+- Atualizar `VERSION.md`, `CHANGELOG.md` e runbook de upstream.
+
+## 7. STG/PRD ainda em planejamento
+
+- Preencher esqueletos de `ops/compose/stg/` e `ops/compose/prd/`.
+- Definir requisitos de VM, DNS, TLS, SMTP, backup, restore e observabilidade.
+- Nao adicionar secrets reais ao repositorio.
