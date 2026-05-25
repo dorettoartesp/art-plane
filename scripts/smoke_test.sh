@@ -75,12 +75,36 @@ wait_for "required services running" 300 check_required_services || {
   exit 1
 }
 
+echo "Checking worker restart counters..."
+check_no_crash_loop() {
+  local service
+  local container_id
+  local restart_count
+
+  for service in api worker beat-worker; do
+    container_id="$(compose ps -q "$service" || true)"
+    [[ -n "$container_id" ]] || return 1
+
+    restart_count="$(docker inspect -f '{{.RestartCount}}' "$container_id")"
+    [[ "$restart_count" == "0" ]] || {
+      echo "Service '$service' restarted $restart_count time(s)." >&2
+      return 1
+    }
+  done
+}
+
+check_no_crash_loop || {
+  compose ps
+  compose logs --tail=120 api worker beat-worker
+  exit 1
+}
+
 echo "Checking migrator exit status..."
 check_migrator_completed() {
   local migrator_id
   local status
 
-  migrator_id="$(compose ps -q migrator || true)"
+  migrator_id="$(compose ps -aq migrator || true)"
   [[ -n "$migrator_id" ]] || return 1
 
   status="$(docker inspect -f '{{.State.Status}} {{.State.ExitCode}}' "$migrator_id")"
