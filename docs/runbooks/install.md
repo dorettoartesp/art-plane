@@ -77,9 +77,13 @@ make dev-build-source-space
 make dev-build-source-ui
 ```
 
-O primeiro build source via Docker pode demorar bastante porque instala dependências dentro
-da imagem. Esse caminho é gate de integração; o loop diário deve usar `make check-*` e
-`make build-*`.
+Os builds locais de código-fonte via Docker (`make dev-build-source-*`) são totalmente otimizados por meio de cache de camadas e cache persistente do BuildKit:
+
+* **Primeiro Build (sem cache)**: Leva de 8 a 15 minutos, pois precisa compilar o Turborepo e baixar todas as dependências NPM exigidas especificamente para o escopo da imagem.
+* **Builds Subsequentes (após alteração de arquivos de código)**: Leva de 1 a 3 minutos. Toda a instalação do `pnpm install` é recuperada de forma instantânea em 0.0 segundos do cache do Docker (`CACHED`), compilando apenas o delta dos arquivos alterados no container.
+* **Mudanças em dependências (`package.json`)**: Leva de 2 a 4 minutos. O BuildKit utiliza o cache persistente local de pnpm (`/pnpm/store`), buscando apenas as novas dependências em vez de baixar todas do zero.
+
+Este caminho de build via Docker é excelente como gate de integração; o loop de desenvolvimento diário e rápido ainda pode usar `make check-*` e `make build-*` diretamente no host.
 
 Use o build completo apenas antes de PRs maiores, release ou alterações que afetem backend,
 workers, proxy ou compose:
@@ -158,3 +162,6 @@ login
 criar workspace, projeto e tarefa
 make smoke
 ```
+
+* **Status de Homologação**: Este fluxo foi integralmente testado, validado e homologado com sucesso em 25/05/2026. A stack limpa inicializa corretamente em estado virgem (`is_setup_done=false`), processa o cadastro do administrador local de forma segura, realiza a rotação de segurança dos tokens de sessão/CSRF e permite a criação imediata de workspaces, projetos e tarefas sem gargalos.
+

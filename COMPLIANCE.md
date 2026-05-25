@@ -33,4 +33,9 @@ Consultar CHANGELOG.md.
 - `plane/apps/web/public/manifest.json`
 - `plane/apps/admin/public/site.webmanifest.json`
 - `plane/apps/space/public/site.webmanifest.json`
-- `plane/apps/web/core/components/auth-screens/footer.tsx`
+- `plane/apps/web/core/components/auth-screens/footer.tsx` (corrigido acentuação para "Código-fonte")
+- `plane/packages/i18n/src/constants/language.ts` (traduação PT-BR habilitada como padrão)
+- `plane/apps/web/Dockerfile.web` (caching de dependências e pnpm install otimizado)
+- `plane/apps/admin/Dockerfile.admin` (caching de dependências e pnpm install otimizado)
+- `plane/apps/space/Dockerfile.space` (caching de dependências e pnpm install otimizado)
+- `plane/apps/live/Dockerfile.live` (caching de dependências e pnpm install otimizado)

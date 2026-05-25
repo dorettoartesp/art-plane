@@ -18,7 +18,7 @@ export function AuthFooter() {
           rel="noreferrer"
           className="text-accent-primary hover:underline"
         >
-          Codigo-fonte correspondente
+          Código-fonte correspondente
         </a>
       </div>
     </div>
