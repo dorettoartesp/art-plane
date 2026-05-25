@@ -12,7 +12,7 @@ O codigo derivado permanece sob GNU Affero General Public License v3.
 ## Codigo-fonte correspondente
 
 O fork institucional deve ser publicado em:
-https://github.com/artesp/plane-artesp
+https://github.com/dorettoartesp/art-plane
 
 ## Itens excluidos da publicacao
 
@@ -23,3 +23,14 @@ codigo-fonte correspondente.
 ## Alteracoes ARTESP
 
 Consultar CHANGELOG.md.
+
+## Primeiros arquivos derivados modificados
+
+- `plane/apps/web/app/root.tsx`
+- `plane/apps/admin/app/root.tsx`
+- `plane/apps/space/app/root.tsx`
+- `plane/apps/web/public/site.webmanifest.json`
+- `plane/apps/web/public/manifest.json`
+- `plane/apps/admin/public/site.webmanifest.json`
+- `plane/apps/space/public/site.webmanifest.json`
+- `plane/apps/web/core/components/auth-screens/footer.tsx`

@@ -56,7 +56,29 @@ make dev-up
 O fluxo padrão usa as imagens CE publicadas `makeplane/plane-*` e não compila o código
 do Plane. Isso é intencional para permitir instalação local rápida em uma máquina nova.
 
-Para validar mudanças no código em `plane/`, use o alvo separado:
+Para validar mudanças no código em `plane/`, escolha o menor alvo que cobre a alteração:
+
+```bash
+make plane-install
+make check-web
+make build-web
+make check-admin
+make build-admin
+make check-space
+make build-space
+```
+
+Use Docker apenas quando precisar validar a imagem/container gerado:
+
+```bash
+make dev-build-source-web
+make dev-build-source-admin
+make dev-build-source-space
+make dev-build-source-ui
+```
+
+Use o build completo apenas antes de PRs maiores, release ou alterações que afetem backend,
+workers, proxy ou compose:
 
 ```bash
 make dev-build-source

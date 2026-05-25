@@ -55,11 +55,37 @@ O fluxo padrão não compila o código-fonte do Plane. Ele usa
 `plane/deployments/cli/community/docker-compose.yml` com imagens `makeplane/plane-*`,
 para que uma máquina nova consiga subir o ambiente sem build longo.
 
-Para validar customização local de código-fonte, use o alvo separado:
+Para validar customização local de código-fonte, escolha o menor alvo que cobre a mudança:
+
+```bash
+make plane-install        # primeira vez, instala deps locais do Plane via pnpm/Corepack
+make check-web            # typecheck do app web
+make build-web            # build local do app web, sem Docker
+make check-admin
+make build-admin
+make check-space
+make build-space
+```
+
+Use Docker apenas quando precisar validar a imagem/container gerado:
+
+```bash
+make dev-build-source-web      # mudanças no app web
+make dev-build-source-admin    # mudanças no admin
+make dev-build-source-space    # mudanças no space
+make dev-build-source-ui       # mudanças nos três frontends
+```
+
+Use o build completo apenas como gate mais pesado, antes de PRs grandes, release ou mudança
+em backend/infra:
 
 ```bash
 make dev-build-source
 ```
+
+Não é necessário rodar `make dev-build-source` a cada alteração. O fluxo diário deve ser:
+`make dev-up`, editar, rodar `make check-*`/`make build-*` do app alterado e finalizar
+com `make smoke`. O build Docker completo é gate de integração, não loop de edição.
 
 Acesse:
 
